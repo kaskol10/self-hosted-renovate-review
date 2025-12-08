@@ -40,6 +40,10 @@ inputs:
     description: 'Repository to checkout for the analyzer (defaults to action repository, e.g., owner/self-hosted-renovate-review)'
     required: false
     default: 'kaskol10/self-hosted-renovate-review'
+  action_ref:
+    description: 'Git ref (branch, tag, or commit SHA) to checkout for building the analyzer. If using a specific version tag in the uses line (e.g., @v0.1.0), you can specify the same ref here (e.g., v0.1.0) to ensure consistency. Leave empty to use the default branch.'
+    required: false
+    default: ''
 runs:
   using: 'composite'
   steps:
@@ -52,30 +56,22 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: ${{ inputs.action_repo || github.action_repository }}
+        ref: ${{ inputs.action_ref }}
         path: ${{ inputs.checkout_path }}
         fetch-depth: 0
 
     - name: Build analyzer
       run: |
         CHECKOUT_DIR="${{ github.workspace }}/${{ inputs.checkout_path }}"
-        echo "Checking directory: $CHECKOUT_DIR"
         if [ ! -d "$CHECKOUT_DIR" ]; then
           echo "Error: Checkout directory not found: $CHECKOUT_DIR"
-          echo "Contents of workspace:"
-          ls -la "${{ github.workspace }}" || true
           exit 1
         fi
-        echo "Contents of checkout directory:"
-        ls -la "$CHECKOUT_DIR" || true
         if [ ! -f "$CHECKOUT_DIR/go.mod" ]; then
           echo "Error: go.mod not found in $CHECKOUT_DIR"
-          echo "Looking for go.mod in subdirectories:"
-          find "$CHECKOUT_DIR" -name "go.mod" -type f 2>/dev/null || true
           exit 1
         fi
         cd "$CHECKOUT_DIR"
-        echo "Current directory: $(pwd)"
-        echo "go.mod location: $(realpath go.mod)"
         go mod download
         go build -o analyzer ./cmd/analyzer
       shell: bash

@@ -1,5 +1,8 @@
 # Self-Hosted Renovate Review
 
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Marketplace-blue)](https://github.com/marketplace/actions/self-hosted-renovate-review)
+[![Release](https://img.shields.io/github/v/release/kaskol10/self-hosted-renovate-review)](https://github.com/kaskol10/self-hosted-renovate-review/releases)
+
 An AI-powered GitHub Action that automatically analyzes Renovate bot PRs for breaking changes and provides detailed impact assessments before merging dependency updates. Uses self-hosted LLM models (vLLM/LiteLLM) with Self Hosted models - no external API costs.
 
 ## 🎯 Features
@@ -111,7 +114,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Analyze PR
-        uses: kaskol10/self-hosted-renovate-review@main
+        uses: kaskol10/self-hosted-renovate-review@v0.1.0
         with:
           llm_api_url: ${{ secrets.LLM_API_URL }}
           llm_api_key: ${{ secrets.LLM_API_KEY || 'not-needed' }}
@@ -124,13 +127,15 @@ jobs:
 - `github.event.pull_request.number` for the PR number
 - `$GITHUB_TOKEN` for authentication
 
+> **💡 Versioning**: We recommend using a specific version tag (e.g., `@v0.1.0`) for production workflows. Use `@main` for the latest development version. See [Releases](https://github.com/kaskol10/self-hosted-renovate-review/releases) for available versions.
+
 ## 📖 Usage Examples
 
 ### Basic Usage (GitHub-Hosted Runner)
 
 ```yaml
 - name: Analyze PR
-  uses: owner/self-hosted-renovate-review@main
+  uses: kaskol10/self-hosted-renovate-review@v1.0.0
   with:
     llm_api_url: ${{ secrets.LLM_API_URL }}
     llm_api_key: 'not-needed'
@@ -162,8 +167,8 @@ jobs:
 ### Advanced Configuration
 
 ```yaml
-- name: Analyze PR
-  uses: owner/self-hosted-renovate-review@main
+      - name: Analyze PR
+        uses: kaskol10/self-hosted-renovate-review@v0.1.0
   with:
     llm_api_url: ${{ secrets.LLM_API_URL }}
     llm_api_key: ${{ secrets.LLM_API_KEY || 'not-needed' }}
@@ -197,6 +202,7 @@ jobs:
 | `go_version` | `'1.21'` | Go version to use for building the analyzer. |
 | `checkout_path` | `'self-hosted-renovate-review'` | Path where the action repository will be checked out. |
 | `action_repo` | `''` | Repository to checkout for the analyzer. Defaults to the action repository automatically. |
+| `action_ref` | `''` | Git ref (branch, tag, or commit SHA) to checkout for building the analyzer. Optional: if using a specific version tag in the `uses` line (e.g., `@v0.1.0`), you can specify the same ref here (e.g., `v0.1.0`) to ensure the built code matches the action version. Leave empty to use the default branch. |
 
 ## 📤 Outputs
 
@@ -278,6 +284,24 @@ go build -o analyzer ./cmd/analyzer
   --llm-provider vllm
 ```
 
+
+## 📦 Releases
+
+See [CHANGELOG.md](./CHANGELOG.md) for a detailed list of changes in each version.
+
+**Latest Release**: [v0.1.0](https://github.com/kaskol10/self-hosted-renovate-review/releases/tag/v0.1.0)
+
+**All Releases**: [View on GitHub](https://github.com/kaskol10/self-hosted-renovate-review/releases)
+
+### Versioning
+
+- **`@v0.1.0`** - Use a specific version (recommended for production)
+- **`@v0.1`** - Use the latest v0.1.x version
+- **`@main`** - Use the latest development version (may have breaking changes)
+
+## 📝 License
+
+[MIT](LICENSE)
 
 ## 🤝 Contributing
 
