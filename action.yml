@@ -21,11 +21,11 @@ inputs:
     required: false
     default: ''
   repo:
-    description: 'Repository name in format owner/repo (defaults to ${{ github.repository }} if not provided)'
+    description: 'Repository name in format owner/repo (defaults to github.repository from workflow context if not provided)'
     required: false
     default: ''
   pr_number:
-    description: 'Pull request number to analyze (defaults to ${{ github.event.pull_request.number }} if not provided)'
+    description: 'Pull request number to analyze (defaults to github.event.pull_request.number from workflow context if not provided)'
     required: false
     default: ''
   go_version:
@@ -47,14 +47,12 @@ runs:
       uses: actions/setup-go@v5
       with:
         go-version: ${{ inputs.go_version }}
-      shell: bash
 
     - name: Checkout Self-Hosted Renovate Review
       uses: actions/checkout@v4
       with:
         repository: ${{ inputs.action_repo || github.action_repository }}
         path: ${{ inputs.checkout_path }}
-        shell: bash
 
     - name: Build analyzer
       working-directory: ${{ inputs.checkout_path }}
