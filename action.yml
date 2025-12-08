@@ -39,7 +39,7 @@ inputs:
   action_repo:
     description: 'Repository to checkout for the analyzer (defaults to action repository, e.g., owner/self-hosted-renovate-review)'
     required: false
-    default: ''
+    default: 'kaskol10/self-hosted-renovate-review'
 runs:
   using: 'composite'
   steps:
