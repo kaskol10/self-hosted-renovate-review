@@ -55,8 +55,8 @@ runs:
         path: ${{ inputs.checkout_path }}
 
     - name: Build analyzer
-      working-directory: ${{ inputs.checkout_path }}
       run: |
+        cd "${{ inputs.checkout_path }}"
         go mod download
         go build -o analyzer ./cmd/analyzer
       shell: bash
@@ -78,13 +78,13 @@ runs:
       shell: bash
 
     - name: Analyze PR with AI
-      working-directory: ${{ inputs.checkout_path }}
       env:
         LLM_API_URL: ${{ steps.normalize_url.outputs.normalized_url }}
         LLM_API_KEY: ${{ inputs.llm_api_key }}
         LLM_PROVIDER: ${{ inputs.llm_provider }}
         LLM_MODEL: ${{ inputs.llm_model }}
       run: |
+        cd "${{ inputs.checkout_path }}"
         # Use provided inputs or fall back to GitHub context
         REPO="${{ inputs.repo }}"
         if [ -z "$REPO" ]; then
