@@ -17,7 +17,7 @@ inputs:
     description: 'LLM model name (e.g., Qwen/Qwen2.5-7B-Instruct)'
     required: true
   github_token:
-    description: 'GitHub token for API access (defaults to $GITHUB_TOKEN environment variable if not provided)'
+    description: 'GitHub token for API access (defaults to github.token from GitHub context if not provided)'
     required: false
     default: ''
   repo:
@@ -98,6 +98,7 @@ runs:
         LLM_API_KEY: ${{ inputs.llm_api_key }}
         LLM_PROVIDER: ${{ inputs.llm_provider }}
         LLM_MODEL: ${{ inputs.llm_model }}
+        GITHUB_TOKEN_CONTEXT: ${{ github.token }}
       run: |
         CHECKOUT_DIR="${{ github.workspace }}/${{ inputs.checkout_path }}"
         cd "$CHECKOUT_DIR"
@@ -114,11 +115,10 @@ runs:
         
         GITHUB_TOKEN_VAL="${{ inputs.github_token }}"
         if [ -z "$GITHUB_TOKEN_VAL" ]; then
-          # Use the automatically provided GITHUB_TOKEN environment variable
-          # This is automatically set by GitHub Actions in workflows
-          GITHUB_TOKEN_VAL="${GITHUB_TOKEN:-}"
+          # Use github.token from the GitHub context (passed as env var)
+          GITHUB_TOKEN_VAL="$GITHUB_TOKEN_CONTEXT"
           if [ -z "$GITHUB_TOKEN_VAL" ]; then
-            echo "Error: GITHUB_TOKEN not provided and not available in environment"
+            echo "Error: GITHUB_TOKEN not provided and github.token not available"
             exit 1
           fi
         fi
