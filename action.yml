@@ -1,5 +1,5 @@
 name: 'Self-Hosted Renovate Review'
-description: 'AI-powered analysis of Renovate PRs using self-hosted LLM models (vLLM/LiteLLM). Automatically detects breaking changes and provides impact assessments.'
+description: 'AI-powered analysis of Renovate PRs using self-hosted LLM models (vLLM/LiteLLM).'
 branding:
   icon: 'robot'
   color: 'blue'
