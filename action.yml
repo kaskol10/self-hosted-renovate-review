@@ -1,0 +1,125 @@
+name: 'Self-Hosted Renovate Review'
+description: 'AI-powered analysis of Renovate PRs using self-hosted LLM models (vLLM/LiteLLM). Automatically detects breaking changes and provides impact assessments.'
+branding:
+  icon: 'robot'
+  color: 'blue'
+inputs:
+  llm_api_url:
+    description: 'LLM API URL (e.g., http://localhost:8000/v1 for self-hosted runners, or https://your-server.com/v1 for remote)'
+    required: true
+  llm_api_key:
+    description: 'LLM API key (use "not-needed" if authentication is not required, e.g., for vLLM on self-hosted runners)'
+    required: true
+  llm_provider:
+    description: 'LLM provider - use "vllm" for direct vLLM server or "litellm" for LiteLLM proxy'
+    required: true
+  llm_model:
+    description: 'LLM model name (e.g., Qwen/Qwen2.5-7B-Instruct)'
+    required: true
+  github_token:
+    description: 'GitHub token for API access (defaults to $GITHUB_TOKEN environment variable if not provided)'
+    required: false
+    default: ''
+  repo:
+    description: 'Repository name in format owner/repo (defaults to ${{ github.repository }} if not provided)'
+    required: false
+    default: ''
+  pr_number:
+    description: 'Pull request number to analyze (defaults to ${{ github.event.pull_request.number }} if not provided)'
+    required: false
+    default: ''
+  go_version:
+    description: 'Go version to use for building the analyzer'
+    required: false
+    default: '1.21'
+  checkout_path:
+    description: 'Path where the action repository will be checked out'
+    required: false
+    default: 'self-hosted-renovate-review'
+  action_repo:
+    description: 'Repository to checkout for the analyzer (defaults to action repository, e.g., owner/self-hosted-renovate-review)'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go_version }}
+      shell: bash
+
+    - name: Checkout Self-Hosted Renovate Review
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.action_repo || github.action_repository }}
+        path: ${{ inputs.checkout_path }}
+        shell: bash
+
+    - name: Build analyzer
+      working-directory: ${{ inputs.checkout_path }}
+      run: |
+        go mod download
+        go build -o analyzer ./cmd/analyzer
+      shell: bash
+
+    - name: Normalize LLM URL
+      id: normalize_url
+      run: |
+        LLM_URL="${{ inputs.llm_api_url }}"
+        LLM_URL="${LLM_URL%/chat/completions}"
+        LLM_URL="${LLM_URL%/v1/chat/completions}"
+        if [[ ! "$LLM_URL" =~ /v1$ ]]; then
+          if [[ "$LLM_URL" =~ /$ ]]; then
+            LLM_URL="${LLM_URL}v1"
+          else
+            LLM_URL="${LLM_URL}/v1"
+          fi
+        fi
+        echo "normalized_url=$LLM_URL" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Analyze PR with AI
+      working-directory: ${{ inputs.checkout_path }}
+      env:
+        LLM_API_URL: ${{ steps.normalize_url.outputs.normalized_url }}
+        LLM_API_KEY: ${{ inputs.llm_api_key }}
+        LLM_PROVIDER: ${{ inputs.llm_provider }}
+        LLM_MODEL: ${{ inputs.llm_model }}
+      run: |
+        # Use provided inputs or fall back to GitHub context
+        REPO="${{ inputs.repo }}"
+        if [ -z "$REPO" ]; then
+          REPO="${{ github.repository }}"
+        fi
+        
+        PR_NUMBER="${{ inputs.pr_number }}"
+        if [ -z "$PR_NUMBER" ]; then
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+        fi
+        
+        GITHUB_TOKEN_VAL="${{ inputs.github_token }}"
+        if [ -z "$GITHUB_TOKEN_VAL" ]; then
+          # Use the automatically provided GITHUB_TOKEN environment variable
+          # This is automatically set by GitHub Actions in workflows
+          GITHUB_TOKEN_VAL="${GITHUB_TOKEN:-}"
+          if [ -z "$GITHUB_TOKEN_VAL" ]; then
+            echo "Error: GITHUB_TOKEN not provided and not available in environment"
+            exit 1
+          fi
+        fi
+        
+        LLM_KEY_VAL="${{ inputs.llm_api_key }}"
+        if [ "$LLM_KEY_VAL" = "not-needed" ]; then
+          LLM_KEY_VAL=""
+        fi
+        
+        ./analyzer \
+          --repo "$REPO" \
+          --pr-number "$PR_NUMBER" \
+          --github-token "$GITHUB_TOKEN_VAL" \
+          --llm-url "${{ steps.normalize_url.outputs.normalized_url }}" \
+          --llm-key "$LLM_KEY_VAL" \
+          --llm-provider "${{ inputs.llm_provider }}"
+      shell: bash
+
