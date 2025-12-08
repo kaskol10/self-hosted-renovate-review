@@ -56,7 +56,16 @@ runs:
 
     - name: Build analyzer
       run: |
-        cd "${{ inputs.checkout_path }}"
+        CHECKOUT_DIR="${{ github.workspace }}/${{ inputs.checkout_path }}"
+        if [ ! -d "$CHECKOUT_DIR" ]; then
+          echo "Error: Checkout directory not found: $CHECKOUT_DIR"
+          exit 1
+        fi
+        if [ ! -f "$CHECKOUT_DIR/go.mod" ]; then
+          echo "Error: go.mod not found in $CHECKOUT_DIR"
+          exit 1
+        fi
+        cd "$CHECKOUT_DIR"
         go mod download
         go build -o analyzer ./cmd/analyzer
       shell: bash
@@ -84,7 +93,8 @@ runs:
         LLM_PROVIDER: ${{ inputs.llm_provider }}
         LLM_MODEL: ${{ inputs.llm_model }}
       run: |
-        cd "${{ inputs.checkout_path }}"
+        CHECKOUT_DIR="${{ github.workspace }}/${{ inputs.checkout_path }}"
+        cd "$CHECKOUT_DIR"
         # Use provided inputs or fall back to GitHub context
         REPO="${{ inputs.repo }}"
         if [ -z "$REPO" ]; then
