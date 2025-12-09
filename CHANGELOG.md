@@ -5,6 +5,22 @@ All notable changes to the Self-Hosted Renovate Review action will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-12-08
+
+### Fixed
+- Fixed GitHub token handling in composite actions - now properly uses `github.token` context variable
+- Improved error handling for missing GitHub token with clearer error messages
+
+### Changed
+- Updated README structure with usage section at the top
+- Improved documentation for required workflow permissions
+- Enhanced troubleshooting section with permission error guidance
+
+### Documentation
+- Added screenshot to README
+- Clarified permissions requirements (`contents: read` and `pull-requests: write`)
+- Updated examples to show proper permissions configuration
+
 ## [0.1.0] - 2025-12-08
 
 ### Added
